@@ -21,6 +21,9 @@ ex() {
     fi
 }
 
+# fix test end_reason
+# slow5tools view a.slow5 | cut  -f 1-13 --output-delimiter=$'\t' > b.slow5 && diff ${FILE} b.slow5  && mv a.slow5 ${FILE}
+
 # DNA R9
 echo "Basic DNA"
 ex ./squigulator test/nCoV-2019.reference.fasta -o a.slow5 -q a.fasta -n 10 --seed 1 --dwell-std 1.0 -r 20000 -t1 || die "Running the tool failed"

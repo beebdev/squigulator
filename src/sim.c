@@ -43,9 +43,9 @@ SOFTWARE.
 #include "misc.h"
 
 void set_header_attributes(slow5_file_t *sp, int8_t rna, int8_t r10, int8_t prom, double sample_frequency);
-void set_header_aux_fields(slow5_file_t *sp, int8_t ont_friendly);
+void set_header_aux_fields(slow5_file_t *sp);
 void set_record_primary_fields(profile_t *profile, slow5_rec_t *slow5_record, char *read_id, double offset, int64_t len_raw_signal, int16_t *raw_signal);
-void set_record_aux_fields(slow5_rec_t *slow5_record, slow5_file_t *sp, double median_before, int32_t read_number, uint64_t start_time, int8_t ont_friendly);
+void set_record_aux_fields(slow5_rec_t *slow5_record, slow5_file_t *sp, double median_before, int32_t read_number, uint64_t start_time);
 uint32_t read_model(model_t* model, const char* file, uint32_t type);
 uint32_t set_model(model_t* model, uint32_t model_id);
 
@@ -351,7 +351,7 @@ static core_t *init_core(opt_t opt, profile_t p, char *refname, char *output_fil
     }
 
     set_header_attributes(core->sp, opt.flag & SQ_RNA ? 1 : 0, opt.flag & SQ_R10 ? 1 : 0, opt.flag & SQ_PROM ? 1 : 0, p.sample_rate);
-    set_header_aux_fields(core->sp, opt.flag & SQ_ONT ? 1 : 0);
+    set_header_aux_fields(core->sp);
 
     if(slow5_hdr_write(core->sp) < 0){
         ERROR("%s","Error writing header!\n");
@@ -613,7 +613,7 @@ void work_per_single_read(core_t* core,db_t* db, int32_t i, int tid) {
 
     int64_t n_samples = __sync_fetch_and_add(&core->n_samples, len_raw_signal);
     set_record_primary_fields(&core->profile, slow5_record, read_id, offset, len_raw_signal, raw_signal);
-    set_record_aux_fields(slow5_record, sp, median_before, core->total_reads+i, n_samples, opt.flag & SQ_ONT ? 1 : 0);
+    set_record_aux_fields(slow5_record, sp, median_before, core->total_reads+i, n_samples);
 
     //encode to a buffer
     if (slow5_encode(&db->mem_records[i], &db->mem_bytes[i], slow5_record, sp) < 0){
@@ -764,7 +764,7 @@ static void print_help(FILE *fp_help, opt_t opt, profile_t p, int64_t nreads) {
     fprintf(fp_help,"   --cdna                     generate cDNA reads (only for dna profiles & the reference must a transcriptome)\n");
     fprintf(fp_help,"   --trans-count FILE         simulate relative abundance using tsv file [transcript name, count]  (for direct-rna & cDNA)\n");
     fprintf(fp_help,"   --trans-trunc=yes/no       simulate transcript truncation (only for direct-rna) [no]\n");
-    fprintf(fp_help,"   --ont-friendly=yes/no      generate fake uuid for readids and add a dummy end_reason [no]\n");
+    fprintf(fp_help,"   --ont-friendly=yes/no      generate fake uuid for readids [no]\n");
     fprintf(fp_help,"   --meth-freq FILE           simulate CpG methylation using frequency tsv file [chr, 0-based pos, freq] (for DNA)\n");
 
     fprintf(fp_help,"\ndeveloper options (less tested):\n");

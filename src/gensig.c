@@ -125,7 +125,7 @@ void set_header_attributes(slow5_file_t *sp, int8_t rna, int8_t r10, int8_t prom
 
 }
 
-void set_header_aux_fields(slow5_file_t *sp, int8_t ont_friendly){
+void set_header_aux_fields(slow5_file_t *sp){
 
     //add auxilliary field: channel number
     if (slow5_aux_add("channel_number", SLOW5_STRING, sp->header) < 0){
@@ -155,14 +155,13 @@ void set_header_aux_fields(slow5_file_t *sp, int8_t ont_friendly){
         exit(EXIT_FAILURE);
     }
     //add auxilliary field: end_reason
-    if(ont_friendly){
-        const char *enum_labels[]={"unknown","partial","mux_change","unblock_mux_change","data_service_unblock_mux_change","signal_positive","signal_negative"};
-        uint8_t num_labels = 7;
-        if (slow5_aux_add_enum("end_reason", enum_labels, num_labels, sp->header) < 0){
-            ERROR("%s","Error adding end_reason auxilliary field\n");
-            exit(EXIT_FAILURE);
-        }
+    const char *enum_labels[]={"unknown","partial","mux_change","unblock_mux_change","data_service_unblock_mux_change","signal_positive","signal_negative"};
+    uint8_t num_labels = 7;
+    if (slow5_aux_add_enum("end_reason", enum_labels, num_labels, sp->header) < 0){
+        ERROR("%s","Error adding end_reason auxilliary field\n");
+        exit(EXIT_FAILURE);
     }
+
 }
 
 void set_record_primary_fields(profile_t *profile, slow5_rec_t *slow5_record, char *read_id, double offset, int64_t len_raw_signal, int16_t *raw_signal){
@@ -179,7 +178,7 @@ void set_record_primary_fields(profile_t *profile, slow5_rec_t *slow5_record, ch
 
 }
 
-void set_record_aux_fields(slow5_rec_t *slow5_record, slow5_file_t *sp, double median_before, int32_t read_number, uint64_t start_time, int8_t ont_friendly){
+void set_record_aux_fields(slow5_rec_t *slow5_record, slow5_file_t *sp, double median_before, int32_t read_number, uint64_t start_time){
 
     const char *channel_number = "0";
     uint8_t start_mux = 0;
@@ -209,13 +208,13 @@ void set_record_aux_fields(slow5_rec_t *slow5_record, slow5_file_t *sp, double m
         exit(EXIT_FAILURE);
     }
 
-    if(ont_friendly){
-        uint8_t end_reason = 0;
-        if(slow5_aux_set(slow5_record, "end_reason", &end_reason, sp->header) < 0){
-            ERROR("%s","Error setting end_reason auxilliary field\n");
-            exit(EXIT_FAILURE);
-        }
+
+    uint8_t end_reason = 0;
+    if(slow5_aux_set(slow5_record, "end_reason", &end_reason, sp->header) < 0){
+        ERROR("%s","Error setting end_reason auxilliary field\n");
+        exit(EXIT_FAILURE);
     }
+
 
 }
 
