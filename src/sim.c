@@ -512,6 +512,7 @@ void fake_uuid(char *read_id, int64_t num){
 
 char *gen_read(core_t *core, char **ref_id, int32_t *ref_len, int32_t *ref_pos, int32_t *rlen, char *c, int8_t rna, int tid);
 int16_t *gen_sig(core_t *core, const char *read, int32_t len, double *offset, double *median_before, int64_t *len_raw_signal, int8_t rna, int tid, aln_t *aln);
+void methylate_dna(core_t *core, int32_t ref_len, int32_t ref_pos, int32_t rlen, char c, char *seq, int seq_i, int tid);
 void methylate_all_c_dna(core_t *core, int32_t ref_len, int32_t ref_pos, int32_t rlen, char c, char *seq, int seq_i, int tid);
 
 /* process the ith read in the batch db */
@@ -552,7 +553,11 @@ void work_per_single_read(core_t* core,db_t* db, int32_t i, int tid) {
         ref_pos_st = 0;
         ref_pos_end = rlen;
         if(core->opt.meth_freq){
-            methylate_all_c_dna(core, rlen, ref_pos_st, rlen, strand, seq, core->total_reads+i, tid);
+            if (opt.flag & SQ_ALL_CTX) {
+                methylate_all_c_dna(core, rlen, ref_pos_st, rlen, strand, seq, core->total_reads+i, tid);
+            } else{
+                methylate_dna(core, rlen, ref_pos_st, rlen, strand, seq, core->total_reads+i, tid);
+            }
         }
     } else {
         seq=gen_read(core, &rid, &ref_len, &ref_pos_st, &rlen, &strand, rna, tid);
@@ -706,7 +711,8 @@ static struct option long_options[] = {
     {"cdna", no_argument, 0, 0 },                   //34 cdna
     {"ont-friendly", required_argument, 0, 0},             //35 ont-friendly
     {"meth-freq", required_argument, 0, 0 },                   //36 meth-freq
-    {"meth-model", required_argument, 0, 0 },                   //37 meth-model
+    {"meth-model", required_argument, 0, 0 },                  //37 meth-model
+    {"meth-all-ctx", required_argument, 0, 0 },                 //38 meth-all-ctx
     {0, 0, 0, 0}};
 
 
@@ -771,6 +777,7 @@ static void print_help(FILE *fp_help, opt_t opt, profile_t p, int64_t nreads) {
     fprintf(fp_help,"   --median-before-std FLOAT  Median before standard deviation [%.1f]\n",p.median_before_std);
     fprintf(fp_help,"   --kmer-model FILE          custom nucleotide k-mer model file (format similar to f5c models)\n");
     fprintf(fp_help,"   --meth-model FILE          custom methylation k-mer model file (format similar to f5c models)\n");
+    fprintf(fp_help,"   --meth-all-ctx=yes/no      relax CpG condition (for custom meth-model)\n");
     fprintf(fp_help,"\n");
     fprintf(fp_help,"See the manual page on GitHub for more details, options and the format of input/output files.\n");
 
@@ -1004,6 +1011,9 @@ int sim_main(int argc, char* argv[], double realtime0) {
         } else if (c == 0 && longindex == 37){ //meth model
             opt.meth_model_file = optarg;
             //WARNING("%s","Option --meth-model is experimental. Please report any issues.")
+        } else if (c == 0 && longindex == 38){ //all context
+            WARNING("%s","Option --meth-all-ctx is experimental. Please report any issues.")
+            yes_or_no(&opt, SQ_ALL_CTX, longindex, optarg, 1);
         } else if (c == '?'){
             exit(EXIT_FAILURE);
         } else {

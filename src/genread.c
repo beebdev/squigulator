@@ -204,7 +204,7 @@ static inline int get_rlen(core_t *core, int tid){
     return len;
 }
 
-static void methylate_dna(core_t *core, int32_t ref_len, int32_t ref_pos, int32_t rlen, char c, char *seq, int seq_i, int tid){
+void methylate_dna(core_t *core, int32_t ref_len, int32_t ref_pos, int32_t rlen, char c, char *seq, int seq_i, int tid){
     if(core->ref->ref_meth[seq_i]){
         for(int i=0; i<rlen; i++){
             int rpos = ref_pos+i;
@@ -308,7 +308,11 @@ static char *gen_read_dna(core_t *core, char **ref_id, int32_t *ref_len, int32_t
     }
 
     if(core->opt.meth_freq){
-        methylate_all_c_dna(core, *ref_len, *ref_pos, *rlen, *c, seq, seq_i, tid);
+        if(core->opt.flag & SQ_ALL_CTX){
+            methylate_all_c_dna(core, *ref_len, *ref_pos, *rlen, *c, seq, seq_i, tid);
+        } else {
+            methylate_dna(core, *ref_len, *ref_pos, *rlen, *c, seq, seq_i, tid);
+        }
     }
 
     return seq;
