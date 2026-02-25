@@ -42,7 +42,7 @@ SOFTWARE.
 #include "error.h"
 #include "misc.h"
 
-void set_header_attributes(slow5_file_t *sp, int8_t rna, int8_t r10, double sample_frequency);
+void set_header_attributes(slow5_file_t *sp, int8_t rna, int8_t r10, int8_t prom, double sample_frequency);
 void set_header_aux_fields(slow5_file_t *sp, int8_t ont_friendly);
 void set_record_primary_fields(profile_t *profile, slow5_rec_t *slow5_record, char *read_id, double offset, int64_t len_raw_signal, int16_t *raw_signal);
 void set_record_aux_fields(slow5_rec_t *slow5_record, slow5_file_t *sp, double median_before, int32_t read_number, uint64_t start_time, int8_t ont_friendly);
@@ -154,17 +154,20 @@ static inline profile_t set_profile(char *prof_name, opt_t *opt){
     if(strcmp(prof_name, "dna-r9-min") == 0){
         return minion_r9_dna_prof;
     }else if(strcmp(prof_name, "dna-r9-prom") == 0){
+        opt->flag |= SQ_PROM;
         return prom_r9_dna_prof;
     }else if(strcmp(prof_name, "rna-r9-min") == 0){
         opt->flag |= SQ_RNA;
         return minion_r9_rna_prof;
     }else if(strcmp(prof_name, "rna-r9-prom") == 0){
         opt->flag |= SQ_RNA;
+        opt->flag |= SQ_PROM;
         return prom_r9_rna_prof;
     }else if(strcmp(prof_name, "dna-r10-prom") == 0){
         INFO("%s", "dna-r10-prom is 5kHz from squigulator v0.3.0 onwards. Specify --sample-rate 4000 for old 4kHz.")
         WARNING("%s","Parameters and models for dna-r10-prom 5khz are still crude. If you have good modification-free data, please share!");
         opt->flag |= SQ_R10;
+        opt->flag |= SQ_PROM;
         return prom_r10_dna_prof;
     }else if(strcmp(prof_name, "dna-r10-min") == 0){
         INFO("%s", "dna-r10-min is 5kHz from squigulator v0.3.0 onwards. Specify --sample-rate 4000 for old 4kHz.")
@@ -180,6 +183,7 @@ static inline profile_t set_profile(char *prof_name, opt_t *opt){
         WARNING("%s","Parameters and models for rna004-prom are still crude. If you have good IVT data, please share!");
         opt->flag |= SQ_R10;
         opt->flag |= SQ_RNA;
+        opt->flag |= SQ_PROM;
         return prom_rna004_rna_prof;
     }else{
         ERROR("Unknown profile: %s\n", prof_name);
@@ -346,7 +350,7 @@ static core_t *init_core(opt_t opt, profile_t p, char *refname, char *output_fil
         exit(EXIT_FAILURE);
     }
 
-    set_header_attributes(core->sp, opt.flag & SQ_RNA ? 1 : 0, opt.flag & SQ_R10 ? 1 : 0, p.sample_rate);
+    set_header_attributes(core->sp, opt.flag & SQ_RNA ? 1 : 0, opt.flag & SQ_R10 ? 1 : 0, opt.flag & SQ_PROM ? 1 : 0, p.sample_rate);
     set_header_aux_fields(core->sp, opt.flag & SQ_ONT ? 1 : 0);
 
     if(slow5_hdr_write(core->sp) < 0){

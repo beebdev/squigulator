@@ -37,104 +37,59 @@ char *attach_prefix(core_t *core, const char *read, int32_t *len, aln_t *aln);
 void gen_prefix_dna(int16_t *raw_signal, int64_t* n, int64_t *c, profile_t *profile, double offset);
 int16_t *gen_prefix_rna(core_t *core, int16_t *raw_signal, int64_t* n, int64_t *c, double offset, int tid, aln_t *aln);
 
-void set_header_attributes(slow5_file_t *sp, int8_t rna, int8_t r10, double sample_frequency){
+
+static inline void slow5_hdr_add_check(const char *attr_name, slow5_hdr_t *header){
+    if (slow5_hdr_add(attr_name, header) < 0){
+        ERROR("Error adding %s attribute", attr_name);
+        exit(EXIT_FAILURE);
+    }
+}
+
+static inline void slow5_hdr_set_check(const char *attr_name, const char *value, slow5_hdr_t *header){
+    if (slow5_hdr_set(attr_name, value, 0, header) < 0){
+        ERROR("Error setting %s attribute in read group %d", attr_name, 0);
+        exit(EXIT_FAILURE);
+    }
+}
+
+void set_header_attributes(slow5_file_t *sp, int8_t rna, int8_t r10, int8_t prom, double sample_frequency){
 
     slow5_hdr_t *header=sp->header;
 
-    //add a header group attribute called run_id
-    if (slow5_hdr_add("run_id", header) < 0){
-        ERROR("%s","Error adding run_id attribute");
-        exit(EXIT_FAILURE);
-    }
-    //add another header group attribute called protocol_run_id
-    if (slow5_hdr_add("protocol_run_id", header) < 0){
-        ERROR("%s","Error adding protocol_run_id attribute");
-        exit(EXIT_FAILURE);
-    }
-    //add another header group attribute called asic_id
-    if (slow5_hdr_add("asic_id", header) < 0){
-        ERROR("%s","Error adding asic_id attribute");
-        exit(EXIT_FAILURE);
-    }
-    //add another header group attribute called protocol_start_time
-    if (slow5_hdr_add("protocol_start_time", header) < 0){
-        ERROR("%s","Error adding protocol_start_time attribute");
-        exit(EXIT_FAILURE);
-    }
-    //add another header group attribute called exp_start_time
-    if (slow5_hdr_add("exp_start_time", header) < 0){
-        ERROR("%s","Error adding asic_id attribute");
-        exit(EXIT_FAILURE);
-    }
-    //add another header group attribute called flow_cell_id
-    if (slow5_hdr_add("flow_cell_id", header) < 0){
-        ERROR("%s","Error adding flow_cell_id attribute");
-        exit(EXIT_FAILURE);
-    }
-    //add another header group attribute called experiment_type
-    if (slow5_hdr_add("experiment_type", header) < 0){
-        ERROR("%s","Error adding experiment_type attribute");
-        exit(EXIT_FAILURE);
-    }
-    //add another header group attribute called sequencing_kit
-    if (slow5_hdr_add("sequencing_kit", header) < 0){
-        ERROR("%s","Error adding sequencing_kit attribute");
-        exit(EXIT_FAILURE);
-    }
-    //add another header group attribute called sample_frequency
-    if (slow5_hdr_add("sample_frequency", header) < 0){
-        ERROR("%s","Error adding sample_frequency attribute");
-        exit(EXIT_FAILURE);
-    }
-    if (slow5_hdr_add("system_name", header) < 0){
-        ERROR("%s","Error adding system_name attribute");
-        exit(EXIT_FAILURE);
-    }
-    if (slow5_hdr_add("sample_id", header) < 0){
-        ERROR("%s","Error adding sample_id attribute");
-        exit(EXIT_FAILURE);
-    }
-    if (slow5_hdr_add("flow_cell_product_code", header) < 0){
-        ERROR("%s","Error adding sample_id attribute");
-        exit(EXIT_FAILURE);
+    //header group attributes
+
+    slow5_hdr_add_check("asic_id", header);
+    slow5_hdr_add_check("exp_start_time", header);
+    slow5_hdr_add_check("experiment_name", header);
+    slow5_hdr_add_check("experiment_type", header);
+    slow5_hdr_add_check("flow_cell_id", header);
+    slow5_hdr_add_check("flow_cell_product_code", header);
+
+    slow5_hdr_add_check("protocol_run_id", header);
+    slow5_hdr_add_check("protocol_start_time", header);
+    slow5_hdr_add_check("run_id", header);
+    slow5_hdr_add_check("sample_frequency", header);
+    slow5_hdr_add_check("sample_id", header);
+    slow5_hdr_add_check("sequencing_kit", header);
+    slow5_hdr_add_check("sequencer_position", header);
+    slow5_hdr_add_check("system_name", header);
+
+
+    //dna/rna
+    const char* experiment_type = rna ? "rna" : "genomic_dna" ;
+
+    //flow cell
+    const char* flow_cell = ".";
+    if(r10){
+        if(rna){
+            flow_cell = prom ? "FLO-PRO004RA" : "FLO-MIN004RA";
+        } else {
+            flow_cell = prom ? "FLO-PRO114M" : "FLO-MIN114";
+        }
+    } else {
+        flow_cell = prom ? "FLO-PRO002" : "FLO-MIN106";
     }
 
-    //set the run_id attribute to "run_0" for read group 0
-    if (slow5_hdr_set("run_id", "run_0", 0, header) < 0){
-        ERROR("%s","Error setting run_id attribute in read group 0");
-        exit(EXIT_FAILURE);
-    }
-    //set the protocol_run_id attribute to "protocol_run_0" for read group 0
-    if (slow5_hdr_set("protocol_run_id", "protocol_run_0", 0, header) < 0){
-        ERROR("%s","Error setting protocol_run_id attribute in read group 0");
-        exit(EXIT_FAILURE);
-    }
-    //set the asic_id attribute to "asic_0" for read group 0
-    if (slow5_hdr_set("asic_id", "asic_id_0", 0, header) < 0){
-        ERROR("%s","Error setting asic_id attribute in read group 0");
-        exit(EXIT_FAILURE);
-    }
-    //set the exp_start_time attribute to "2022-07-20T00:00:00Z" for read group 0
-    if (slow5_hdr_set("exp_start_time", "2022-07-20T00:00:00Z", 0, header) < 0){
-        ERROR("%s","Error setting exp_start_time attribute in read group 0");
-        exit(EXIT_FAILURE);
-    }
-    //set the protocol_start_time attribute to "2022-07-20T00:00:00Z" for read group 0
-    if (slow5_hdr_set("protocol_start_time", "2022-07-20T00:00:00Z", 0, header) < 0){
-        ERROR("%s","Error setting protocol_start_time attribute in read group 0");
-        exit(EXIT_FAILURE);
-    }
-    //set the flow_cell_id attribute to "FAN00000" for read group 0
-    if (slow5_hdr_set("flow_cell_id", "FAN00000", 0, header) < 0){
-        ERROR("%s","Error setting flow_cell_id attribute in read group 0");
-        exit(EXIT_FAILURE);
-    }
-    //set the experiment_type attribute to genomic_dna or rna for read group 0
-    const char* experiment_type = rna ? "rna" : "genomic_dna" ;
-    if (slow5_hdr_set("experiment_type", experiment_type, 0, header) < 0){
-        ERROR("%s","Error setting experiment_type attribute in read group 0");
-        exit(EXIT_FAILURE);
-    }
     //sequencing kit
     const char* kit = ".";
     if(rna){
@@ -142,34 +97,31 @@ void set_header_attributes(slow5_file_t *sp, int8_t rna, int8_t r10, double samp
     } else{
         kit = r10 ? "sqk-lsk114" : "sqk-lsk109";
     }
-    if (slow5_hdr_set("sequencing_kit", kit, 0, header) < 0){
-        ERROR("%s","Error setting sequencing_kit attribute in read group 0");
-        exit(EXIT_FAILURE);
-    }
+
     //sample_frequency
     if(sample_frequency<=0 || sample_frequency>1000000000){
         ERROR("%s","A weird sample frequency. It should be between 0 and 1000000000 Hz");
         exit(EXIT_FAILURE);
     }
-    char buffer[100];
-    sprintf(buffer, "%d", (int)sample_frequency);
-    if (slow5_hdr_set("sample_frequency", buffer, 0, header) < 0){
-        ERROR("%s","Error setting sample_frequency attribute in read group 0");
-        exit(EXIT_FAILURE);
-    }
+    char sample_frequency_str[100];
+    sprintf(sample_frequency_str, "%d", (int)sample_frequency);
 
-    if (slow5_hdr_set("system_name", "PCA000000", 0, header) < 0){
-        ERROR("%s","Error setting system_name attribute in read group 0");
-        exit(EXIT_FAILURE);
-    }
-    if (slow5_hdr_set("sample_id", "test", 0, header) < 0){
-        ERROR("%s","Error setting sample_id attribute in read group 0");
-        exit(EXIT_FAILURE);
-    }
-    if (slow5_hdr_set("flow_cell_product_code", "FLO-00", 0, header) < 0){
-        ERROR("%s","Error setting flow_cell_product_code attribute in read group 0");
-        exit(EXIT_FAILURE);
-    }
+    //set header attributes
+    slow5_hdr_set_check("asic_id", "asic_id_0", header);
+    slow5_hdr_set_check("exp_start_time", "2026-02-20T00:00:00Z", header);
+    slow5_hdr_set_check("experiment_name", "experiment_0", header);
+    slow5_hdr_set_check("experiment_type", experiment_type, header);
+    slow5_hdr_set_check("flow_cell_id", "FAN00000", header);
+    slow5_hdr_set_check("flow_cell_product_code", flow_cell, header);
+    slow5_hdr_set_check("protocol_run_id", "protocol_run_0", header);
+    slow5_hdr_set_check("protocol_start_time", "2026-02-20T00:00:00Z", header);
+    slow5_hdr_set_check("run_id", "run_0", header);
+    slow5_hdr_set_check("sample_frequency", sample_frequency_str, header);
+    slow5_hdr_set_check("sample_id", "squigulator", header);
+    slow5_hdr_set_check("sequencing_kit", kit, header);
+    slow5_hdr_set_check("sequencer_position", "P0", header);
+    slow5_hdr_set_check("system_name", "PCA000000", header);
+
 
 }
 
