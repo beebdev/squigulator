@@ -54,7 +54,7 @@ RUN_TEST(){
     # /install/modkit-v0.1.13/modkit pileup --cpg --ref ref_chr22.fa --ignore h -t 32 new.bam  new.tmp.bedmethyl
     # grep "chr22" new.tmp.bedmethyl |  grep -v nan  > new.bedmethyl
     ${MINIMOD} mod-freq ref_chr22.fa new.bam -b > new.bedmethyl 2>> a.log || die "minimod failed"
-    ${COMPARE} ${METH_TRUTH} new.bedmethyl > methcomp.tsv 2>> a.log || die "compare failed"
+    python3 ${COMPARE} ${METH_TRUTH} new.bedmethyl > methcomp.tsv 2>> a.log || die "compare failed"
     tail -n+2 methcomp.tsv | datamash ppearson 3:5 > a.acc || die "pearson failed"
     # ~/hasindu2008.git/f5c/scripts/plot_methylation.R  -i methcomp.tsv -o methcomp.pdf
     cat a.acc
