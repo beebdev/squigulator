@@ -45,3 +45,4 @@ Developer options (which are not much tested and error handling) are as below:
 -  `--median-before-std`:        Median before standard deviation (see [here](https://hasindu2008.github.io/slow5specs/summary))
 -  `--kmer-model FILE`:          custom nucleotide k-mer model file (format similar to [f5c models](https://github.com/hasindu2008/f5c/blob/master/test/r9-models/r9.4_450bps.nucleotide.6mer.template.model))
 -  `--meth-model FILE`:          custom methylation k-mer model file (format similar to [f5c models](https://github.com/hasindu2008/f5c/blob/master/test/r9-models/r9.4_450bps.cpg.6mer.template.model))
+-  `--meth-all-ctx=yes/no`:      relax CpG condition (for custom meth-model)

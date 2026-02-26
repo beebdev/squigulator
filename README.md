@@ -35,7 +35,7 @@ Please cite the following in your publications when using *squigulator*:
 For x86-64 Linux, you can use the precompiled binaries under [releases](https://github.com/hasindu2008/squigulator/releases):
 
 ```
-VERSION=0.4.0-dirty
+VERSION=0.5.0
 wget https://github.com/hasindu2008/squigulator/releases/download/v${VERSION}/squigulator-v${VERSION}-x86_64-linux-binaries.tar.gz
 tar xf squigulator-v${VERSION}-x86_64-linux-binaries.tar.gz  && cd squigulator-v${VERSION}
 ./squigulator --help
