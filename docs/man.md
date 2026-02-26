@@ -1,9 +1,9 @@
-# Squigulator Options (v0.2)
+# Squigulator Options
 
 Basic options in *squigulator* are as below:
 
 - `-o FILE`: SLOW5/BLOW5 file to write.
-- `-x STR`: Parameter profile (always applied before other options). Available profiles are: *dna-r9-min*, *dna-r9-prom, rna-r9-min*, *rna-r9-prom*, *dna-r10-min*, *dna-r10-prom*, *rna004-min, *rna004-prom* [default: dna-r9-prom]
+- `-x STR`: Parameter profile (always applied before other options). Available profiles are: *dna-r9-min*, *dna-r9-prom, rna-r9-min*, *rna-r9-prom*, *dna-r10-min*, *dna-r10-prom*, *rna004-min, *rna004-prom*. See [here](profile.md) for details. [default: dna-r9-prom]
 - `-n INT`: Number of reads to simulate. [default: 4000]
 - `-r INT `: Mean read length (estimated mean only, unused for RNA) [default: 10000]
 - `-f INT`:  fold coverage to simulate (incompatible with -n)
