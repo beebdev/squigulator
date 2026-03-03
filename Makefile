@@ -9,9 +9,14 @@ ifeq ($(zstd),1)
 LDFLAGS		+= -lzstd
 endif
 
+STATICLIB	= $(BUILD_DIR)/libsquigulator.a
+
 BINARY = squigulator
-OBJ = $(BUILD_DIR)/main.o \
-      $(BUILD_DIR)/model.o \
+
+OBJ_BIN = $(BUILD_DIR)/main.o $(OBJ)
+OBJ_LIB = $(BUILD_DIR)/sq_api.o $(OBJ)
+
+OBJ = $(BUILD_DIR)/model.o \
 	  $(BUILD_DIR)/methmodel.o \
 	  $(BUILD_DIR)/misc.o \
 	  $(BUILD_DIR)/sim.o \
@@ -31,8 +36,12 @@ endif
 
 .PHONY: clean distclean test
 
-$(BINARY): $(OBJ) slow5lib/lib/libslow5.a
-	$(CC) $(CFLAGS) $(OBJ) slow5lib/lib/libslow5.a $(LDFLAGS) -o $@
+$(BINARY): $(OBJ_BIN) slow5lib/lib/libslow5.a
+	$(CC) $(CFLAGS) $(OBJ_BIN) slow5lib/lib/libslow5.a $(LDFLAGS) -o $@
+
+$(STATICLIB): $(OBJ_LIB) slow5lib/lib/libslow5.a
+	cp slow5lib/lib/libslow5.a $@
+	$(AR) rcs $@ $(OBJ_LIB)
 
 HEADERS = src/error.h src/format.h  src/misc.h  src/model.h  \
 		  src/rand.h  src/ref.h  src/seq.h  src/sq.h  src/str.h  src/version.h \
@@ -40,6 +49,9 @@ HEADERS = src/error.h src/format.h  src/misc.h  src/model.h  \
 
 $(BUILD_DIR)/main.o: src/main.c $(HEADERS)
 	$(CC) $(CFLAGS) $(CPPFLAGS) $< -c -o $@
+
+$(BUILD_DIR)/sq_api.o: src/sq_api.c $(HEADERS) include/squigulator.h
+	$(CC) $(CFLAGS) $(CPPFLAGS) -I include/ $< -c -o $@
 
 $(BUILD_DIR)/model.o: src/model.c src/model.h  src/misc.h
 	$(CC) $(CFLAGS) $(CPPFLAGS) $< -c -o $@
