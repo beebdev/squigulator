@@ -149,7 +149,8 @@ profile_t minion_rna004_rna_prof = {
     .dwell_std=0.0
 };
 
-static inline profile_t set_profile(char *prof_name, opt_t *opt){
+
+profile_t set_profile(char *prof_name, opt_t *opt){
     //opt->rna = 0;
     if(strcmp(prof_name, "dna-r9-min") == 0){
         return minion_r9_dna_prof;
@@ -191,14 +192,14 @@ static inline profile_t set_profile(char *prof_name, opt_t *opt){
     }
 }
 
-static void print_model_stat(profile_t p){
+static inline void print_model_stat(profile_t p){
     VERBOSE("digitisation: %.1f; sample_rate: %.1f; range: %.1f; offset_mean: %.1f; offset_std: %.1f; dwell_mean: %.1f; dwell_std: %.1f",
         p.digitisation,p.sample_rate,p.range,p.offset_mean,p.offset_std,p.dwell_mean,p.dwell_std);
 }
 
 ///////////////////////////////////////////// CORE and DB /////////////////////////////////////////////
 
-static void init_opt(opt_t *opt){
+void init_opt(opt_t *opt){
     //opt->ideal = 0;
     //opt->ideal_time = 0;
     //opt->ideal_amp = 0;
@@ -261,7 +262,7 @@ static void init_rand(core_t *core){
     }
 }
 
-static core_t *init_core(opt_t opt, profile_t p, char *refname, char *output_file, char *fasta, char *paf, char *sam, char *trans_count){
+core_t *init_core(opt_t opt, profile_t p, char *refname, char *output_file, char *fasta, char *paf, char *sam, char *trans_count){
     core_t *core = (core_t *)malloc(sizeof(core_t)); MALLOC_CHK(core);
     core->opt = opt;
 
