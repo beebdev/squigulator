@@ -1,6 +1,14 @@
 #ifndef SQUIGULATOR_H
 #define SQUIGULATOR_H
 
+// squigulator C API which is still in a very early stages
+/*
+Currently, signal is in parallel dumped to a BLOW5, which can be disabled later if deemed a bottleneck
+squig_get_rec can be optimised significantly, as it does some repeated work, that can have been better handled in the core
+Need to hide symbols in the .a
+Need to add some test cases
+*/
+
 #include <stdint.h>
 
 typedef struct {
@@ -31,7 +39,9 @@ typedef struct {
     int32_t batch_size;
     char *output_blow5;
     char *profile;
+
     //things to add later ...
+
 } squig_opt_t;
 
 typedef struct squig_s squig_t;

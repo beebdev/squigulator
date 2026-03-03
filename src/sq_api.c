@@ -13,10 +13,6 @@
 #include "error.h"
 #include "misc.h"
 
-
-
-
-
 struct squig_s {
     core_t *core;
     squig_opt_t opt;
