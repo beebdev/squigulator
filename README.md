@@ -1,10 +1,12 @@
 # squigulator
 
-*squigulator* is a tool for simulating nanopore raw signal data. It is under development and there could be interface changes and changes to default parameters. Do not hesitate to open an [issue](https://github.com/hasindu2008/squigulator) if you found a bug, something is not clear or for any feature requests.
-
-*squigulator* uses traditional pore models and gaussian noise for simulation. Due to simplicity, simulation would not be perfect, but takes miniscule effort to setup and run. Generating 100,000 reads (~1 Gbases) from human genome using *squigulator* takes ~5 minutes with ~3 GB of RAM (8 CPU threads). For ~30X from the human genome (~9M reads, ~90Gbases) with 32 CPU threads, *squigulator* takes ~1 hour.
+*squigulator* is a tool for simulating nanopore raw signal data. *squigulator* uses traditional pore models and gaussian noise for simulation. Due to simplicity, simulation would not be perfect, but takes miniscule effort to setup and run. Generating 100,000 reads (~1 Gbases) from human genome using *squigulator* takes ~5 minutes with ~3 GB of RAM (8 CPU threads). For ~30X from the human genome (~9M reads, ~90Gbases) with 32 CPU threads, *squigulator* takes ~1 hour.
 
 Reads directly extracted from the reference genome are simulated without any mutations/variants. If you want to have variants in your simulated data, you can first apply a set of variants to the reference using [bcftools](http://www.htslib.org/download/) and use that as the input to the *squigulator*.
+
+Publication: [https://doi.org/10.1101/gr.278730.123](https://genome.cshlp.org/content/34/5/778.full?sid=cd2c8aec-be46-4c9e-885c-8452ac069f64) <br/>
+Preprint: [https://www.biorxiv.org/content/10.1101/2023.05.09.539953v1](https://www.biorxiv.org/content/10.1101/2023.05.09.539953v1)<br/>
+SLOW5 ecosystem: [https://hasindu2008.github.io/slow5](https://hasindu2008.github.io/slow5)<br/>
 
 ![squigulator](docs/img/example.svg)
 
@@ -12,18 +14,28 @@ Reads directly extracted from the reference genome are simulated without any mut
 [![BioConda Install](https://img.shields.io/conda/dn/bioconda/squigulator?label=BioConda)](https://anaconda.org/bioconda/squigulator)
 [![x86_64](https://github.com/hasindu2008/squigulator/actions/workflows/c-cpp.yml/badge.svg)](https://github.com/hasindu2008/squigulator/actions/workflows/c-cpp.yml)
 
-## Background story
 
-*squigulator* started as *ssssim* (Stupidly Simple Signal Simulator). For an experiment, [kisarur](https://github.com/kisarur) wanted some simulated data. After [hiruna72](https://github.com/hiruna72) trying ~3 days to get an existing simulator installed (dependency and compatibility issues), I thought that writing a simple tool from scratch is easier. Indeed, that is when writing BLOW5 files. Writing over complicated formats like FAST5 or POD5 would consume months and I would not think about writing a simulator in the first place then.
+Please cite the following in your publications when using *squigulator*:
 
-After getting the basic *ssssim* implemented in ~8 hours and successfully basecalling using [buttery-eel](https://github.com/Psy-Fer/buttery-eel), I realised that it has worked much better than anticipated. Then, I decided to extend it with different features and options. The result is *sigsim* which was eventually named as *squigulator*, a cool name suggested by [IraDeveson](https://github.com/IraDeveson).
+> Gamaarachchi, H., Ferguson, J. M., Samarakoon, H., Liyanage, K., & Deveson, I. W. (2024). Simulation of nanopore sequencing signal data with tunable parameters. Genome Research, 34(5), 778-783.
+
+```
+@article{gamaarachchi2023squigulator,
+  title={Squigulator: simulation of nanopore sequencing signal data with tunable noise parameters},
+  author={Gamaarachchi, Hasindu and Ferguson, James M and Samarakoon, Hiruna and Liyanage, Kisaru and Deveson, Ira W},
+  journal={bioRxiv},
+  pages={2023--05},
+  year={2023},
+  publisher={Cold Spring Harbor Laboratory}
+}
+```
 
 ## Installation
 
 For x86-64 Linux, you can use the precompiled binaries under [releases](https://github.com/hasindu2008/squigulator/releases):
 
 ```
-VERSION=0.2.0-dirty
+VERSION=0.5.0-dirty
 wget https://github.com/hasindu2008/squigulator/releases/download/v${VERSION}/squigulator-v${VERSION}-x86_64-linux-binaries.tar.gz
 tar xf squigulator-v${VERSION}-x86_64-linux-binaries.tar.gz  && cd squigulator-v${VERSION}
 ./squigulator --help
@@ -52,19 +64,21 @@ The simplest command to generate reads:
 squigulator [OPTIONS] ref_genome.fa -o out_signal.blow5 -n NUM_READS
 ```
 
-By default, DNA PromethION reads (R9.4.1) will be simulated. Specify the `-x STR` option to set a different profile from the following available pre-sets (inspired by pre-sets in [Minimap2](https://github.com/lh3/minimap2)).
+By default, DNA PromethION reads (R9.4.1) will be simulated. Specify the `-x STR` option to set a different profile from the following available pre-sets (see [here](docs/profile.md) for more info).
 - `dna-r9-min`: genomic DNA on MinION R9.4.1 flowcells
 - `dna-r9-prom`: genomic DNA on PromethION R9.4.1 flowcells
 - `rna-r9-min`: direct RNA on MinION R9.4.1 flowcells
 - `rna-r9-prom`: direct RNA on PromethION R9.4.1 flowcells
 - `dna-r10-min`: genomic DNA on MinION R10.4.1 flowcells
 - `dna-r10-prom`: genomic DNA on PromethION R10.4.1 flowcells
+- `rna004-min`: direct RNA on MinION RNA004 flowcells
+- `rna004-prom`: direct RNA on promethION RNA004 flowcells
 
 If a genomic DNA profile is selected, the input reference must be the **reference genome in *FASTA* format**. *squigulator* will randomly sample the genome from a uniform distribution and generate reads whose lengths are from a gamma distribution (based on `-r`). If a direct RNA profile is selected, the input reference must be the **transcriptome in *FASTA* format**. For RNA, *squigulator* will randomly pick transcripts from a uniform distribution and the whole transcript length is simulated.
 
 You can basecall the generated raw signal directly from the [BLOW5 format](https://www.nature.com/articles/s41587-021-01147-4) using the SLOW5 Guppy wrapper called [buttery-eel](https://github.com/Psy-Fer/buttery-eel) or our fork of [dorado basecaller](https://github.com/hiruna72/dorado/releases/tag/v0.0.1).  Alternatively, if you love FAST5 that much, use [slow5tools](https://github.com/hasindu2008/slow5tools) to convert the BLOW5 to FAST5 and then use original Guppy basecaller.
 
-Generated read IDs encode the true mapping positions in a format like `S1_33!chr1!225258409!225267761!-`, which is compatible with [*mapeval* command in *paftools.js* under Minimap2 repository](https://github.com/lh3/minimap2/blob/master/misc/README.md#evaluation).
+Generated read IDs encode the true mapping positions in a format like `S1_33!chr1!225258409!225267761!-`, which is compatible with [*mapeval* command in *paftools.js* under Minimap2 repository](https://github.com/lh3/minimap2/blob/master/misc/README.md#evaluation). Mapping positions are 0-based (BED like) coordinates.
 
 Visit the [manual page](docs/man.md) for details of each and every option.
 
@@ -119,3 +133,10 @@ R9 pore-models are from [Nanopolish](https://github.com/jts/nanopolish) and R10 
 Some code snippets have been taken from [Minimap2](https://github.com/lh3/minimap2), [Samtools](http://samtools.sourceforge.net/).
 Kseq from [klib](https://github.com/attractivechaos/klib) is used.
 
+## Background story
+
+*squigulator* started as *ssssim* (Stupidly Simple Signal Simulator). For an experiment, [kisarur](https://github.com/kisarur) wanted some simulated data. After [hiruna72](https://github.com/hiruna72) trying ~3 days to get an existing simulator installed (dependency and compatibility issues), I thought that writing a simple tool from scratch is easier. Indeed, that is when writing BLOW5 files. Writing over complicated formats like FAST5 or POD5 would consume months and I would not think about writing a simulator in the first place then.
+
+After getting the basic *ssssim* implemented in ~8 hours and successfully basecalling using [buttery-eel](https://github.com/Psy-Fer/buttery-eel), I realised that it has worked much better than anticipated. Then, I decided to extend it with different features and options. The result is *sigsim* which was eventually named as *squigulator*, a cool name suggested by [IraDeveson](https://github.com/IraDeveson).
+
+![squigulator](docs/img/cover.png)
