@@ -16,9 +16,9 @@ include_dirs = []
 # for the install.
 try:
     import numpy as np
-    include_dirs = ['src/','python/', 'slow5lib/include/', 'slow5lib/thirdparty/streamvbyte/include/', np.get_include()]
+    include_dirs = ['include/', 'src/','python/', 'slow5lib/include/', 'slow5lib/thirdparty/streamvbyte/include/', np.get_include()]
 except ImportError:
-    include_dirs = ['src/','python/', 'slow5lib/include/', 'slow5lib/thirdparty/streamvbyte/include/']
+    include_dirs = ['include/', 'src/','python/', 'slow5lib/include/', 'slow5lib/thirdparty/streamvbyte/include/']
     def np(*args, ** kwargs ):
         import numpy as np
         return np(*args, ** kwargs)
@@ -34,10 +34,16 @@ except ImportError:
 
 #adapted from https://github.com/lh3/minimap2/blob/master/setup.py
 
-sources=['python/pysq.pyx',
+sources=['python/pysquigulator.pyx',
+         'src/format.c',
+         'src/genread.c',
+         'src/gensig.c',
+         'src/methmodel.c',
          'src/misc.c',
          'src/model.c',
+         'src/ref.c',
          'src/sim.c',
+         'src/sq_api.c',
          'src/thread.c',
          'slow5lib/src/slow5.c',
          'slow5lib/src/slow5_press.c',
@@ -46,15 +52,22 @@ sources=['python/pysq.pyx',
          'slow5lib/thirdparty/streamvbyte/src/streamvbyte_zigzag.c',
          'slow5lib/thirdparty/streamvbyte/src/streamvbyte_decode.c',
          'slow5lib/thirdparty/streamvbyte/src/streamvbyte_encode.c']
-depends=['python/pysq.pxd',
-         'python/pysq.h',
+depends=['python/pysquigulator.pxd',
+         'python/pysquigulator.h',
+         'include/squigulator.h',
          'src/error.h',
+         'src/format.h',
+         'src/khash.h',
          'src/kseq.h',
+         'src/ksort.h',
          'src/misc.h',
          'src/model.h',
+         'src/rand.h',
          'src/ref.h',
+         'src/seq.h',
          'src/sq.h',
          'src/str.h',
+         'src/version.h',
          'slow5lib/include/slow5/slow5.h',
          'slow5lib/include/slow5/slow5_defs.h',
          'slow5lib/include/slow5/slow5_error.h',
@@ -64,25 +77,16 @@ depends=['python/pysq.pxd',
          'slow5lib/src/slow5_extra.h',
          'slow5lib/src/slow5_idx.h',
          'slow5lib/src/slow5_misc.h',
-         'slow5lib/src/klib/ksort.h',
+         'slow5lib/src/slow5_byte.h',
          'slow5lib/thirdparty/streamvbyte/include/streamvbyte.h',
          'slow5lib/thirdparty/streamvbyte/include/streamvbyte_zigzag.h']
 extra_compile_args = ['-g', '-Wall', '-O2', '-std=c99']
-# extra_compile_args = []
-# os.environ["CFLAGS"] = '-g -Wall -O2 -std=c99'
 
-# arch=platform.machine()
-# if arch in ["aarch64", "arm64"]:
-#     extra_compile_args.append('-D__ARM_NEON__')
-# elif arch in ["aarch64"]:
-# 	extra_compile_args.append('-mfpu=neon')
-# elif arch in ["x86_64"]:
-#     extra_compile_args.extend(['-mssse3'])   # WARNING: ancient x86_64 CPUs don't have SSSE3
 
 libraries = ['m', 'z']
 library_dirs = ['.']
 
-extensions = [Extension('pysq',
+extensions = [Extension('pysquigulator',
                   sources = sources,
                   depends = depends,
                   extra_compile_args = extra_compile_args,
@@ -92,21 +96,21 @@ extensions = [Extension('pysq',
                   language = 'c' )]
 
 def readme():
-	with open('docs/pysq_api/pysq.md') as f:
+	with open('python/README.md') as f:
 		return f.read()
 
 
 setup(
-    name = 'pysq',
-    version='0.0.1',
-    url = 'https://github.com/Psy-Fer/pysigfish',
-    description='pysq python bindings',
+    name = 'pysquigulator',
+    version='0.5.0-dev',
+    url = 'https://github.com/hasindu2008/squigulator',
+    description='pysquigulator python bindings',
     long_description=readme(),
     long_description_content_type='text/markdown',
-    author='James Ferguson, Hasindu Gamaarachchi',
-    author_email='j.ferguson@garvan.org.au',
-    maintainer='James Ferguson',
-    maintainer_email='j.ferguson@garvan.org.au',
+    author='Hasindu Gamaarachchi',
+    author_email='hasindu@garvan.org.au',
+    maintainer='Hasindu Gamaarachchi',
+    maintainer_email='hasindu@garvan.org.au',
     license = 'MIT',
     keywords = ['nanopore', 'signal'],
     ext_modules=extensions,
@@ -119,7 +123,7 @@ setup(
         'Programming Language :: Python :: 3',
         'Intended Audience :: Science/Research',
         'Topic :: Scientific/Engineering :: Bio-Informatics'],
-    python_requires='>=3.8.16',
+    python_requires='>=3.4.3',
     install_requires=["numpy"],
     setup_requires=["Cython", "numpy"]
     )

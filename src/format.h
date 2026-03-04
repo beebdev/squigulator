@@ -25,7 +25,7 @@ typedef struct {
     int64_t prefix_end;
 } aln_t;
 
-aln_t *init_aln();
+aln_t *init_aln(void);
 void free_aln(aln_t *aln);
 char *paf_str(aln_t *aln);
 void sam_hdr_wr(FILE *fp, ref_t *ref);
