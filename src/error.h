@@ -26,7 +26,7 @@ enum sq_log_level_opt {
     LOG_TRAC      // tracing, debugging, verbose, information, warning and error messages
 };
 
-enum sq_log_level_opt get_log_level();
+enum sq_log_level_opt get_log_level(void);
 void set_log_level(enum sq_log_level_opt level);
 
 #define DEBUG_PREFIX "[DEBUG] %s: "
