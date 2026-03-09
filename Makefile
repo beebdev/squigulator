@@ -20,6 +20,7 @@ OBJ = $(BUILD_DIR)/main.o \
 	  $(BUILD_DIR)/gensig.o \
 	  $(BUILD_DIR)/genread.o \
 	  $(BUILD_DIR)/ref.o \
+	  $(BUILD_DIR)/bed.o \
 
 PREFIX = /usr/local
 VERSION = `git describe --tags`
@@ -36,7 +37,7 @@ $(BINARY): $(OBJ) slow5lib/lib/libslow5.a
 
 HEADERS = src/error.h src/format.h  src/misc.h  src/model.h  \
 		  src/rand.h  src/ref.h  src/seq.h  src/sq.h  src/str.h  src/version.h \
-		  src/kseq.h src/khash.h src/ksort.h
+		  src/kseq.h src/khash.h src/ksort.h src/bed.h
 
 $(BUILD_DIR)/main.o: src/main.c $(HEADERS)
 	$(CC) $(CFLAGS) $(CPPFLAGS) $< -c -o $@
@@ -66,6 +67,9 @@ $(BUILD_DIR)/genread.o: src/genread.c $(HEADERS)
 	$(CC) $(CFLAGS) $(CPPFLAGS) $< -c -o $@
 
 $(BUILD_DIR)/ref.o: src/ref.c $(HEADERS)
+	$(CC) $(CFLAGS) $(CPPFLAGS) $< -c -o $@
+
+$(BUILD_DIR)/bed.o: src/bed.c src/bed.h $(HEADERS)
 	$(CC) $(CFLAGS) $(CPPFLAGS) $< -c -o $@
 
 

@@ -8,6 +8,7 @@
 #include <stdint.h>
 #include "ref.h"
 #include "rand.h"
+#include "bed.h"
 #include "slow5/slow5.h"
 
 //model types
@@ -42,6 +43,7 @@
 #define SQ_ONT 0x400 //ont friendly
 #define SQ_PROM 0x800 //is a promethion
 #define SQ_ALL_CTX 0x1000 //all context instead of CpG
+#define SQ_FIXED_RLEN 0x2000 //fixed read length (no gamma distribution)
 
 #define WORK_STEAL 1 //simple work stealing enabled or not (no work stealing mean no load balancing)
 #define STEAL_THRESH 1 //stealing threshold
@@ -86,6 +88,7 @@ typedef struct{
 
     const char *meth_freq;
     const char *meth_model_file;
+    const char *bed_file;
 } opt_t;
 
 typedef struct {
@@ -115,6 +118,7 @@ typedef struct {
 
     //reference
     ref_t *ref;
+    bed_t *bed;
 
     double process_db_time;
     double output_time;

@@ -214,6 +214,7 @@ static void init_opt(opt_t *opt){
     opt->amp_noise = 1;
     opt->meth_model_file = NULL;
     opt->meth_freq = NULL;
+    opt->bed_file = NULL;
 }
 
 static void init_rand(core_t *core){
@@ -343,6 +344,11 @@ static core_t *init_core(opt_t opt, profile_t p, char *refname, char *output_fil
     if(opt.meth_freq!=NULL){
         load_meth_freq(opt.meth_freq, core->ref);
     }
+    if(opt.bed_file!=NULL){
+        core->bed = load_bed(opt.bed_file, core->ref);
+    } else {
+        core->bed = NULL;
+    }
 
     core->sp = slow5_open(output_file, "w");
     if(core->sp==NULL){
@@ -428,6 +434,7 @@ void free_core(core_t *core){
     }
     slow5_close(core->sp);
     free_ref_sim(core->ref);
+    free_bed(core->bed);
 
     free(core);
 }
@@ -713,6 +720,8 @@ static struct option long_options[] = {
     {"meth-freq", required_argument, 0, 0 },                   //36 meth-freq
     {"meth-model", required_argument, 0, 0 },                  //37 meth-model
     {"meth-all-ctx", required_argument, 0, 0 },                 //38 meth-all-ctx
+    {"fixed-rlen", no_argument, 0, 0 },                        //39 fixed read length
+    {"bed", required_argument, 0, 0 },                         //40 BED file for targeted simulation
     {0, 0, 0, 0}};
 
 
@@ -746,6 +755,8 @@ static void print_help(FILE *fp_help, opt_t opt, profile_t p, int64_t nreads) {
     fprintf(fp_help,"   --version                  print version\n");
     fprintf(fp_help,"   --verbose INT              verbosity level [%d]\n",(int)get_log_level());
     fprintf(fp_help,"   --full-contigs             generate signals for complete contigs/sequences in the input (incompatible with -n, -r & -n)\n");
+    fprintf(fp_help,"   --fixed-rlen               use -r as exact read length instead of mean of gamma distribution\n");
+    fprintf(fp_help,"   --bed FILE                 BED file to restrict read simulation to specified regions\n");
 
     fprintf(fp_help,"\nadvanced options:\n");
     fprintf(fp_help,"   -K INT                     batch size (max number of reads created at once) [%d]\n",opt.batch_size);
@@ -1014,6 +1025,10 @@ int sim_main(int argc, char* argv[], double realtime0) {
         } else if (c == 0 && longindex == 38){ //all context
             WARNING("%s","Option --meth-all-ctx is experimental. Please report any issues.")
             yes_or_no(&opt, SQ_ALL_CTX, longindex, optarg, 1);
+        } else if (c == 0 && longindex == 39){ //fixed-rlen
+            opt.flag |= SQ_FIXED_RLEN;
+        } else if (c == 0 && longindex == 40){ //bed
+            opt.bed_file = optarg;
         } else if (c == '?'){
             exit(EXIT_FAILURE);
         } else {
@@ -1029,6 +1044,15 @@ int sim_main(int argc, char* argv[], double realtime0) {
 
     //check args
     check_args(opt_gvn, rna, opt, paf);
+
+    if(opt.bed_file && (opt.flag & SQ_FULL_CONTIG)){
+        ERROR("%s","Options --bed and --full-contigs are incompatible.");
+        exit(EXIT_FAILURE);
+    }
+    if(opt.bed_file && rna){
+        ERROR("%s","Option --bed is only supported for DNA simulation.");
+        exit(EXIT_FAILURE);
+    }
 
     if((opt.flag & SQ_CDNA) && (opt.flag & SQ_TRANS_TRUNC)){
         ERROR("%s","Option --trans-trunc is not yet implemnted for --cdna.");

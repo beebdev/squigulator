@@ -31,6 +31,7 @@ SOFTWARE.
 #include <assert.h>
 #include "seq.h"
 #include "sq.h"
+#include "bed.h"
 #include "format.h"
 
 
@@ -200,6 +201,9 @@ static inline char get_strand(core_t *core, int tid){
 }
 
 static inline int get_rlen(core_t *core, int tid){
+    if(core->opt.flag & SQ_FIXED_RLEN){
+        return core->opt.rlen;
+    }
     int len = grng(core->rand_rlen[tid]);
     return len;
 }
@@ -274,6 +278,24 @@ void methylate_all_c_dna(core_t *core, int32_t ref_len, int32_t ref_pos, int32_t
 }
 
 
+// pick a random position from BED intervals
+static inline int get_bed_reference_idx(core_t *core, int tid, int32_t *ref_pos_out){
+    bed_t *bed = core->bed;
+    int64_t pos = round(rng(&core->ref_pos[tid]) * bed->sum);
+    int64_t s = 0;
+    for(int i = 0; i < bed->n; i++){
+        int32_t ilen = bed->ends[i] - bed->starts[i];
+        s += ilen;
+        if(s >= pos){
+            *ref_pos_out = bed->starts[i] + (int32_t)(pos - (s - ilen));
+            return bed->seq_idx[i];
+        }
+    }
+    // fallback to last interval (rounding edge case)
+    *ref_pos_out = bed->starts[bed->n - 1];
+    return bed->seq_idx[bed->n - 1];
+}
+
 static char *gen_read_dna(core_t *core, char **ref_id, int32_t *ref_len, int32_t *ref_pos, int32_t *rlen, char *c, int tid){
 
     char *seq = NULL;
@@ -285,11 +307,19 @@ static char *gen_read_dna(core_t *core, char **ref_id, int32_t *ref_len, int32_t
 
         int len = get_rlen(core, tid);
 
-        int32_t ref_pos_gap = 0;
-        seq_i = get_reference_idx(core, tid, &ref_pos_gap);
-        *ref_id = ref->ref_names[seq_i];
-        *ref_pos = ref_pos_gap + ref->ref_lengths[seq_i];
-        *ref_len = ref->ref_lengths[seq_i];
+        if(core->bed != NULL){
+            int32_t bed_pos = 0;
+            seq_i = get_bed_reference_idx(core, tid, &bed_pos);
+            *ref_id = ref->ref_names[seq_i];
+            *ref_pos = bed_pos;
+            *ref_len = ref->ref_lengths[seq_i];
+        } else {
+            int32_t ref_pos_gap = 0;
+            seq_i = get_reference_idx(core, tid, &ref_pos_gap);
+            *ref_id = ref->ref_names[seq_i];
+            *ref_pos = ref_pos_gap + ref->ref_lengths[seq_i];
+            *ref_len = ref->ref_lengths[seq_i];
+        }
 
         *c = get_strand(core, tid);
 
