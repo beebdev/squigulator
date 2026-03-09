@@ -321,6 +321,14 @@ static char *gen_read_dna(core_t *core, char **ref_id, int32_t *ref_len, int32_t
             *ref_len = ref->ref_lengths[seq_i];
         }
 
+        // no-clamp: shift start back so read is exactly len
+        if((core->opt.flag & SQ_FIXED_RLEN) && *ref_pos + len > *ref_len){
+            if(*ref_len >= len){
+                *ref_pos = *ref_len - len;
+            }
+            // else ref is shorter than requested len, gen_read_common will reject and retry
+        }
+
         *c = get_strand(core, tid);
 
         seq = gen_read_common(ref, len, seq_i, *ref_id, *ref_pos, rlen);
